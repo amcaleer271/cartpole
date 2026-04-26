@@ -1,3 +1,5 @@
+import math
+import numpy as np
 
 
 def bang_bang(state, deadzone, force):
@@ -12,20 +14,20 @@ def bang_bang(state, deadzone, force):
 
 class PID:
     def __init__(self, kp, ki, kd):
-        self.error = 0.0
-        self.error_d = 0.0
-        self.error_i = 0.0
+        self.error = np.array([0.0,0.0])
+        self.error_d = np.array([0.0,0.0])
+        self.error_i = np.array([0.0,0.0])
 
-        self.kp = kp
-        self.ki = ki
-        self.kd = kd
+        self.kp = np.array([kp[0], kp[1]])
+        self.ki = np.array([ki[0], ki[1]])
+        self.kd = np.array([kd[0], kd[1]])
 
     def control(self, state, dt):
 
-        self.error = state[1]
-        self.error_d = state[3]
+        self.error = np.array([state[0], state[1]])
+        self.error_d = np.array([state[2], state[3]])
         self.error_i = self.error_i + self.error * dt
 
-        u = self.kp * self.error + self.ki * self.error_i + self.kd * self.error_d
+        u = self.kp @ np.transpose(self.error) + self.ki @ np.transpose(self.error_i) + self.kd @ np.transpose(self.error_d)
 
         return u
