@@ -50,7 +50,6 @@ class Cartpole:
 
     def update(self, u,t):
         #update the state of the cartpole system after a short timestep t
-        
         c = math.cos(self.theta)
         s = math.sin(self.theta)
 
@@ -71,12 +70,6 @@ class Cartpole:
         #Update using EOM
         self.vel = self.vel + self.acc * t
         self.pos = self.pos + self.vel * t
-
-        #Limit the cartpole inside the arena
-        if self.pos[0] > 1.0:
-            self.pos[0] = 1.0
-        elif self.pos[0] < -1.0:
-            self.pos[0] = -1.0
 
 
         self.x, self.theta = self.pos
@@ -111,7 +104,7 @@ class Cartpole:
 
         #Define PID controller with gains kp, ki, kd
         #gains in each array correspond to x,theta
-        pid_controller = PID([-2.0, 1.0],[0.0,0.0],[0.0,0.0])
+        pid_controller = PID([14.5, 50.0],[0.0,2.0],[9.0,9.0])
 
         #iterate through all steps to simulate the cartpole
         for i in range(steps):
@@ -134,11 +127,11 @@ class Cartpole:
         
         return 0
 
-#create cartpole with m1 = m2 = 0.5, L = 0.5
+
 cartpole = Cartpole(1.0,0.5,0.5)
 
 #Simulate 5000 timesteps with dt = 0.001
-cartpole.simulate(0.001, 3000)
+cartpole.simulate(0.001, 5000)
 cartpole.plot_results()
 
 
