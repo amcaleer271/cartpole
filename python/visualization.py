@@ -30,6 +30,8 @@ class visualizer:
 
             self.screen.fill("white")
             self.cart_pos.x = (60*self.x) + self.screen.get_width() / 2
+
+            #Calculate pendulum position from cart and pendulum state
             self.pendulum_pos.x = self.cart_pos.x + (self.cart_width/2)- 60 * math.sin(self.theta)
             self.pendulum_pos.y = self.cart_pos.y - 60 * math.cos(self.theta)
 

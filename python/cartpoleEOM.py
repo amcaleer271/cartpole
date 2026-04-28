@@ -14,16 +14,14 @@ g = 9.81 #m/s2
 
 class Cartpole:
 
-    def __init__(self, m1, m2, L):
+    def __init__(self, m1, m2, L, use_vis=False):
 
         #PARAMETERS
         self.use_controller = "PID"   #available controllers: ["none","bangbang", "PID"]
-        self.use_visualization = True
+        self.use_visualization = use_vis
         
         #Controller gains [x,theta]:
-        self.kp = [14.5, 50.0]
-        self.ki = [0.0,2.0]
-        self.kd = [9.0,9.0]
+        self.kp, self.ki, self.kd = [14.5, 50.0],[0.0,2.0],[9.0,9.0]
 
         #fetch system parameters
         self.m1 = m1
@@ -63,12 +61,12 @@ class Cartpole:
         #EOM of form M_mat * [xdd, theta_dd] = F
         self.M_mat = np.array([
             [self.m1 + self.m2, self.m2 * self.L * c],
-            [c, self.L]
+            [self.m2 * c, self.m2 * self.L]
         ])
 
         self.F = np.array([
             u + self.m2 * self.L * (self.theta_d**2) * s,
-            g * s   
+            self.m2 * g * s   
         ])
 
         #Solve for the current linear and angular acceleration
@@ -109,11 +107,14 @@ class Cartpole:
         plt.show()
 
         
-    def create_metrics(self,dt):
+    def create_metrics(self):
         print("=========================================")
         print("Metrics")
         print("=========================================")
-
+        print("----------Setup----------")
+        print(f"Mass 1 = {self.m1}")
+        print(f"Mass 2 = {self.m2}")
+        print(f"Length = {self.L}")
         #Settling time - time until response remains within 5% of initial value
         print("----------Settling----------")
         print(f"Target (5% of intial value): {0.05 * self.theta0}")
@@ -140,7 +141,7 @@ class Cartpole:
         print(f"Maximum Control Input {max(self.u_data)}")        
 
     def simulate(self, dt, steps):
-
+        self.dt = dt
         #Define PID controller with gains kp, ki, kd, gains in each array correspond to x,theta
         pid_controller = PID(self.kp,self.ki,self.kd)
         
@@ -149,7 +150,7 @@ class Cartpole:
 
         #iterate through all steps to simulate the cartpole
         for i in range(steps):
-            t = i * dt
+            t = i * self.dt
             
             #update simulation one timestep. select controller in __init__
             if self.use_controller == "PID":
@@ -160,10 +161,11 @@ class Cartpole:
             if self.use_controller == "none":
                 self.u = 0.0
 
-            if self.u > 100:
-                self.u = 100
-            if self.u < -100:
-                self.u = -100
+            max_control = 200
+            if self.u > max_control:
+                self.u = max_control
+            if self.u < -max_control:
+                self.u = -max_control
 
             self.update(self.u, dt)
 
@@ -179,13 +181,20 @@ class Cartpole:
         if self.use_visualization:
             viz.end()
 
-#Create cartpole object with arguments m1, m2, L
-cartpole = Cartpole(1.0,0.5,0.5)
+    def set_gains(self, kp, ki, kd):
+        #Can use to change PID gains, must be called before simulate()
+        self.kp = kp
+        self.ki = ki
+        self.kd = kd
 
-#Simulate 5000 timesteps with dt = 0.001
-dt = 0.001
-cartpole.simulate(dt, 5000)
-cartpole.create_metrics(dt)
-cartpole.plot_results()
+cartpole = Cartpole(1.0, 0.5, 0.5)
+cartpole.set_gains([14.5, 50.0],[0.0,2.0],[9.0,9.0])
+cartpole.simulate(0.001, 5000)
+cartpole.create_metrics()
+#cartpole.plot_results()
 
-
+cartpole2 = Cartpole(1.0, 0.5, 0.6)
+cartpole2.set_gains([14.5, 50.0],[0.0,2.0],[9.0,9.0])
+cartpole2.simulate(0.001, 5000)
+cartpole2.create_metrics()
+cartpole2.plot_results()
