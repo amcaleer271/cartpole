@@ -38,6 +38,8 @@ class Cartpole:
         self.xd = 0
         self.xdd = 0
 
+        self.u = 0
+
         #create np arrays for each pose element
         self.acc = np.array([self.xdd, self.theta_dd])
         self.vel = np.array([self.xd, self.theta_d])
@@ -46,6 +48,7 @@ class Cartpole:
         #create empty arrays for plotting
         self.t_data = []
         self.x_data = []
+        self.u_data = []
         self.theta_data = []
 
     def update(self, u,t):
@@ -83,14 +86,20 @@ class Cartpole:
     def plot_results(self):
         plt.figure()
 
-        plt.subplot(2,1,1)
+        plt.subplot(3,1,1)
         plt.plot(self.t_data, self.x_data)
         plt.ylabel("Cart Position x (m)")
         plt.grid()
 
-        plt.subplot(2,1,2)
+        plt.subplot(3,1,2)
         plt.plot(self.t_data, self.theta_data)
         plt.ylabel("Pole Angle θ (rad)")
+        plt.xlabel("Time (s)")
+        plt.grid()
+
+        plt.subplot(3,1,3)
+        plt.plot(self.t_data, self.u_data)
+        plt.ylabel("Control Input u (N)")
         plt.xlabel("Time (s)")
         plt.grid()
 
@@ -105,23 +114,27 @@ class Cartpole:
         #Define PID controller with gains kp, ki, kd
         #gains in each array correspond to x,theta
         pid_controller = PID([14.5, 50.0],[0.0,2.0],[9.0,9.0])
-
+        
         #iterate through all steps to simulate the cartpole
         for i in range(steps):
             t = i * dt
             
             #update simulation one timestep. select controller defined in __init__
             if self.use_controller == "PID":
-                self.update(pid_controller.control([self.x, self.theta, self.xd, self.theta_d], dt), dt)
+                self.u = pid_controller.control([self.x, self.theta, self.xd, self.theta_d], dt)
+                
             if self.use_controller == "bangbang":
-                self.update(bang_bang(self.pos, 0.15, 1.0), dt)
+                self.u = bang_bang(self.pos, 0.15, 1.0)
             if self.use_controller == "none":
-                self.update(0.0, dt)
+                self.u = 0.0
 
-            #add time and pose data for plotting
+            self.update(self.u, dt)
+
+            #append, time, pose, and control data for plotting
             self.t_data.append(t)
             self.x_data.append(self.x)
             self.theta_data.append(self.theta)
+            self.u_data.append(self.u)
 
 
         
