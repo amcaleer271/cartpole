@@ -3,12 +3,12 @@
 # The cart is able to move +/- 1 m from its initial position, and should actively try to center in the arena
 
 
-
 import math
 import numpy as np
 import matplotlib.pyplot as plt
 from control import bang_bang, PID
 import random
+from visualization import *
 
 g = 9.81 #m/s2
 
@@ -16,10 +16,9 @@ class Cartpole:
 
     def __init__(self, m1, m2, L):
 
-        #specify which controller to use
+        #PARAMETERS
         self.use_controller = "PID"
-
-
+        self.use_visualization = True
         #available controllers:
         controllers = ["none","bangbang", "PID"]
 
@@ -30,6 +29,7 @@ class Cartpole:
 
         #initialize angle to random value in range
         self.theta = random.uniform(-0.5, 0.5)
+
         self.theta0 = self.theta
         print(f"starting angle is {self.theta} rads, {self.theta * 180.0 / math.pi} degs")
         #initialize all other state variables to 0
@@ -142,31 +142,58 @@ class Cartpole:
         pid_controller = PID([14.5, 50.0],[0.0,2.0],[9.0,9.0])
         
         #iterate through all steps to simulate the cartpole
-        for i in range(steps):
-            t = i * dt
-            
-            #update simulation one timestep. select controller in __init__
-            if self.use_controller == "PID":
-                self.u = pid_controller.control([self.x, self.theta, self.xd, self.theta_d], dt)
+        if not self.use_visualization:
+            for i in range(steps):
+                t = i * dt
                 
-            if self.use_controller == "bangbang":
-                self.u = bang_bang(self.pos, 0.15, 1.0)
-            if self.use_controller == "none":
-                self.u = 0.0
+                #update simulation one timestep. select controller in __init__
+                if self.use_controller == "PID":
+                    self.u = pid_controller.control([self.x, self.theta, self.xd, self.theta_d], dt)
+                    
+                if self.use_controller == "bangbang":
+                    self.u = bang_bang(self.pos, 0.15, 1.0)
+                if self.use_controller == "none":
+                    self.u = 0.0
 
-            if self.u > 100:
-                self.u = 100
-            if self.u < -100:
-                self.u = -100
+                if self.u > 100:
+                    self.u = 100
+                if self.u < -100:
+                    self.u = -100
 
-            self.update(self.u, dt)
+                self.update(self.u, dt)
 
-            #append, time, pose, and control data for plotting
-            self.t_data.append(t)
-            self.x_data.append(self.x)
-            self.theta_data.append(self.theta * 180.0 / math.pi)
-            self.u_data.append(self.u)
+                #append, time, pose, and control data for plotting
+                self.t_data.append(t)
+                self.x_data.append(self.x)
+                self.theta_data.append(self.theta * 180.0 / math.pi)
+                self.u_data.append(self.u)
+        else:
+            viz = visualizer()
+            for i in range(steps):
+                t = i * dt
+                
+                #update simulation one timestep. select controller in __init__
+                if self.use_controller == "PID":
+                    self.u = pid_controller.control([self.x, self.theta, self.xd, self.theta_d], dt)
+                    
+                if self.use_controller == "bangbang":
+                    self.u = bang_bang(self.pos, 0.15, 1.0)
+                if self.use_controller == "none":
+                    self.u = 0.0
 
+                if self.u > 100:
+                    self.u = 100
+                if self.u < -100:
+                    self.u = -100
+
+                self.update(self.u, dt)
+                viz.update(self.x, self.theta, self.L)
+                #append, time, pose, and control data for plotting
+                self.t_data.append(t)
+                self.x_data.append(self.x)
+                self.theta_data.append(self.theta * 180.0 / math.pi)
+                self.u_data.append(self.u)
+            viz.end()
 
 cartpole = Cartpole(1.0,0.5,0.5)
 
