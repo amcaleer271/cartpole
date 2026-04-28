@@ -29,8 +29,9 @@ class Cartpole:
         self.L = L
 
         #initialize angle to random value in range
-        #self.theta = random.uniform(-3.14, 3.14)
-        self.theta = 0.5
+        self.theta = random.uniform(-0.5, 0.5)
+        self.theta0 = self.theta
+        print(f"starting angle is {self.theta} rads, {self.theta * 180.0 / math.pi} degs")
         #initialize all other state variables to 0
         self.theta_d = 0
         self.theta_dd = 0
@@ -79,8 +80,6 @@ class Cartpole:
         self.xd, self.theta_d = self.vel
         self.xdd, self.theta_dd = self.acc
 
-
-        return 0
     
     #Plot pose using matplotlib
     def plot_results(self):
@@ -93,7 +92,7 @@ class Cartpole:
 
         plt.subplot(3,1,2)
         plt.plot(self.t_data, self.theta_data)
-        plt.ylabel("Pole Angle θ (rad)")
+        plt.ylabel("Pole Angle θ (degrees)")
         plt.xlabel("Time (s)")
         plt.grid()
 
@@ -106,20 +105,47 @@ class Cartpole:
         plt.tight_layout()
         plt.show()
 
-        return 0
         
-    #simulate the cartpole for number of steps with dt time increment
+    def create_metrics(self,dt):
+        print("=========================================")
+        print("Metrics")
+        print("=========================================")
+
+        #Settling time - time until response remains within 5% of initial value
+        print("----------Settling----------")
+        print(f"Target (5% of intial value): {0.05 * self.theta0}")
+        print(f"Final value: {self.theta_data[-1]}")
+
+        if abs(self.theta_data[-1]) > abs(0.05 * self.theta0):
+            print(f"System did not reach < 5% settling")
+        else:
+            self.rev_theta = self.theta_data[::-1]
+            self.settled_index = len(self.rev_theta) - next((i for i, x in enumerate(self.rev_theta) if abs(x) > abs(0.05 * self.theta0)), None)
+
+            print(f"System settled after {self.t_data[self.settled_index]} s")
+
+        
+        print("----------Control----------")
+
+        #RMS control input
+        self.u_RMS = 0.0
+        for i, u in enumerate(self.u_data):
+            self.u_RMS += u ** 2
+        self.u_RMS = math.sqrt(self.u_RMS / (i+1))
+        
+        print(f"RMS Control input: {self.u_RMS} N")
+        print(f"Maximum Control Input {max(self.u_data)}")        
+
     def simulate(self, dt, steps):
 
-        #Define PID controller with gains kp, ki, kd
-        #gains in each array correspond to x,theta
+        #Define PID controller with gains kp, ki, kd, gains in each array correspond to x,theta
         pid_controller = PID([14.5, 50.0],[0.0,2.0],[9.0,9.0])
         
         #iterate through all steps to simulate the cartpole
         for i in range(steps):
             t = i * dt
             
-            #update simulation one timestep. select controller defined in __init__
+            #update simulation one timestep. select controller in __init__
             if self.use_controller == "PID":
                 self.u = pid_controller.control([self.x, self.theta, self.xd, self.theta_d], dt)
                 
@@ -128,23 +154,26 @@ class Cartpole:
             if self.use_controller == "none":
                 self.u = 0.0
 
+            if self.u > 100:
+                self.u = 100
+            if self.u < -100:
+                self.u = -100
+
             self.update(self.u, dt)
 
             #append, time, pose, and control data for plotting
             self.t_data.append(t)
             self.x_data.append(self.x)
-            self.theta_data.append(self.theta)
+            self.theta_data.append(self.theta * 180.0 / math.pi)
             self.u_data.append(self.u)
-
-
-        
-        return 0
 
 
 cartpole = Cartpole(1.0,0.5,0.5)
 
 #Simulate 5000 timesteps with dt = 0.001
-cartpole.simulate(0.001, 5000)
+dt = 0.001
+cartpole.simulate(dt, 5000)
+cartpole.create_metrics(dt)
 cartpole.plot_results()
 
 
