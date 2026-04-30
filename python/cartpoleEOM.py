@@ -6,7 +6,7 @@
 import math
 import numpy as np
 import matplotlib.pyplot as plt
-from control import bang_bang, PID
+from control import bang_bang, PID, LQR
 import random
 from visualization import *
 
@@ -14,14 +14,18 @@ g = 9.81 #m/s2
 
 class Cartpole:
 
-    def __init__(self, m1, m2, L, use_vis=False):
+    def __init__(self, m1, m2, L, use_vis=False, use_controller="none", theta0=random.uniform(-0.5, 0.5)):
 
         #PARAMETERS
-        self.use_controller = "PID"   #available controllers: ["none","bangbang", "PID"]
+        self.use_controller = use_controller #available controllers: ["none","bangbang", "PID", "LQR"]
         self.use_visualization = use_vis
         
-        #Controller gains [x,theta]:
+        #PID Controller gains [x,theta]:
         self.kp, self.ki, self.kd = [14.5, 50.0],[0.0,2.0],[9.0,9.0]
+
+        #LQR Controller gains:
+        self.Q = np.diag([15.0, 3.0, 30.0, 4.0])    #weights correspond to penalizing x, x_dot, theta, theta_dot
+        self.R = np.array([[0.5]])          #penalizes effort
 
         #fetch system parameters
         self.m1 = m1
@@ -29,7 +33,7 @@ class Cartpole:
         self.L = L
 
         #initialize angle to random value in range
-        self.theta = random.uniform(-0.5, 0.5)
+        self.theta = theta0
         self.theta0 = self.theta
         print(f"starting angle is {self.theta} rads, {self.theta * 180.0 / math.pi} degs")
 
@@ -108,8 +112,9 @@ class Cartpole:
 
         
     def create_metrics(self):
+    
         print("=========================================")
-        print("Metrics")
+        print(f"{self.use_controller} Metrics")
         print("=========================================")
         print("----------Setup----------")
         print(f"Mass 1 = {self.m1}")
@@ -143,8 +148,15 @@ class Cartpole:
     def simulate(self, dt, steps):
         self.dt = dt
         #Define PID controller with gains kp, ki, kd, gains in each array correspond to x,theta
-        pid_controller = PID(self.kp,self.ki,self.kd)
-        
+
+        if self.use_controller == "PID":
+            pid_controller = PID(self.kp,self.ki,self.kd)
+
+        if self.use_controller == "LQR": 
+            A = np.array([[0, 1, 0, 0],[0, 0, (-self.m2*g)/self.m1, 0],[0, 0, 0, 1],[0, 0, ((self.m1+self.m2)*g)/(self.m1*self.L), 0]])
+            B = np.array([[0],[1/self.m1],[0],[-1/(self.m1*self.L)]])
+            LQR_controller = LQR(A,B,self.Q,self.R)
+
         if self.use_visualization:
             viz = visualizer()
 
@@ -155,10 +167,14 @@ class Cartpole:
             #update simulation one timestep. select controller in __init__
             if self.use_controller == "PID":
                 self.u = pid_controller.control([self.x, self.theta, self.xd, self.theta_d], dt)
-                
-            if self.use_controller == "bangbang":
+            elif self.use_controller == "LQR":
+                self.u = LQR_controller.control(np.array([self.x, self.xd, self.theta, self.theta_d]))
+            elif self.use_controller == "bangbang":
                 self.u = bang_bang(self.pos, 0.15, 1.0)
-            if self.use_controller == "none":
+            elif self.use_controller == "none":
+                self.u = 0.0
+            else:
+                print("No controller selected, assuming none")
                 self.u = 0.0
 
             max_control = 200
@@ -181,20 +197,19 @@ class Cartpole:
         if self.use_visualization:
             viz.end()
 
-    def set_gains(self, kp, ki, kd):
+    def set_PID_gains(self, kp, ki, kd):
         #Can use to change PID gains, must be called before simulate()
         self.kp = kp
         self.ki = ki
         self.kd = kd
 
-cartpole = Cartpole(1.0, 0.5, 0.5)
-cartpole.set_gains([14.5, 50.0],[0.0,2.0],[9.0,9.0])
-cartpole.simulate(0.001, 5000)
-cartpole.create_metrics()
-#cartpole.plot_results()
+PID_cartpole = Cartpole(1.0, 0.5, 0.5, use_controller="PID", theta0=0.3)
+PID_cartpole.simulate(0.001, 5000)
+PID_cartpole.create_metrics()
+PID_cartpole.plot_results()
 
-cartpole2 = Cartpole(1.0, 0.5, 0.6)
-cartpole2.set_gains([14.5, 50.0],[0.0,2.0],[9.0,9.0])
-cartpole2.simulate(0.001, 5000)
-cartpole2.create_metrics()
-cartpole2.plot_results()
+LQR_cartpole = Cartpole(1.0, 0.5, 0.5, use_controller="LQR", theta0=0.3)
+LQR_cartpole.simulate(0.001, 5000)
+LQR_cartpole.create_metrics()
+LQR_cartpole.plot_results()
+

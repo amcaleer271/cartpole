@@ -1,6 +1,6 @@
 import math
 import numpy as np
-
+from scipy.linalg import solve_continuous_are
 
 def bang_bang(state, deadzone, force):
     u = 0.0
@@ -30,4 +30,22 @@ class PID:
 
         u = self.kp @ np.transpose(self.error) + self.ki @ np.transpose(self.error_i) + self.kd @ np.transpose(self.error_d)
 
+        return u
+    
+class LQR:
+    def __init__(self, A, B, Q, R):
+        self.A = A
+        self.B = B
+        self.Q = Q
+        self.R = R
+
+        #Solve the Riccati equation
+        self.P = solve_continuous_are(self.A, self.B, self.Q, self.R)
+
+        #Compute gains
+        self.K = np.linalg.inv(self.R) @ self.B.T @ self.P
+
+    def control(self, state):
+        #state should be a numpy array of form [x, xdot, theta, thetadot]
+        u = float(-self.K @ state)
         return u
