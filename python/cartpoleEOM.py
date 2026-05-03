@@ -40,6 +40,11 @@ class Cartpole:
         self.xd = 0.0
         self.xdd = 0.0
 
+        self.x_noisy = 0.0
+        self.xd_noisy = 0.0
+        self.theta_noisy = 0.0
+        self.thetad_noisy = 0.0
+
         self.u = 0.0
 
         #create np arrays for each pose element
@@ -53,6 +58,12 @@ class Cartpole:
         self.xd_data = []
         self.u_data = []
         self.theta_data = []
+        
+        if self.noisy:
+            self.x_noisy_data = []
+            self.xd_noisy_data = []
+            self.theta_noisy_data = []
+            self.thetad_noisy_data = []
 
     def update(self, u, t):
         #update the state of the cartpole system after a short timestep t
@@ -80,27 +91,48 @@ class Cartpole:
         self.x, self.theta = self.pos
         self.xd, self.theta_d = self.vel
         self.xdd, self.theta_dd = self.acc
+
+        if self.noisy:
+            self.x_noisy = self.x + random.gauss(0.0, 0.50)
+            self.theta_noisy = self.theta + random.gauss(0.0, 0.50)
+            self.xd_noisy = self.xd + random.gauss(0.0, 0.50)
+            self.thetad_noisy = self.theta_d + random.gauss(0.0, 0.50)
     
     #Plot pose using matplotlib
     def plot_results(self):
         plt.figure()
         plt.suptitle(f"{self.controller}")
-        plt.subplot(3,1,1)
+
+        plt.subplot(5,2,1)
         plt.plot(self.t_data, self.x_data)
         plt.ylabel("Cart Position x (m)")
-        plt.grid()
-
-        plt.subplot(3,1,2)
-        plt.plot(self.t_data, self.theta_data)
-        plt.ylabel("Pole Angle θ (degrees)")
         plt.xlabel("Time (s)")
         plt.grid()
 
-        plt.subplot(3,1,3)
+        plt.subplot(5,2,3)
+        plt.plot(self.t_data, self.theta_data)
+        plt.ylabel("Pole Angle θ (deg)")
+        plt.xlabel("Time (s)")
+        plt.grid()
+
+        plt.subplot(5,2,5)
         plt.plot(self.t_data, self.u_data)
         plt.ylabel("Control Input u (N)")
         plt.xlabel("Time (s)")
         plt.grid()
+
+        if self.noisy:
+            plt.subplot(5,2,2)
+            plt.plot(self.t_data, self.x_noisy_data)
+            plt.ylabel("Measured Cart Position x (m)")
+            plt.xlabel("Time (s)")
+            plt.grid()
+
+            plt.subplot(5,2,4)
+            plt.plot(self.t_data, self.theta_noisy_data)
+            plt.ylabel("Measured Pole Angle θ (deg)")
+            plt.xlabel("Time (s)")
+            plt.grid()
 
         plt.tight_layout()
         plt.show()
@@ -154,7 +186,7 @@ class Cartpole:
             t = i * self.dt
             
             #update simulation one timestep. select controller in __init__
-            self.u=self.controller.control(self.get_state())
+            self.u=self.controller.control(self.get_measured_state())
 
             max_control = 200
             if self.u > max_control:
@@ -174,16 +206,18 @@ class Cartpole:
             self.theta_data.append(self.theta * 180.0 / math.pi)
             self.u_data.append(self.u)
 
+            if self.noisy:
+                self.x_noisy_data.append(self.x_noisy)
+                self.xd_noisy_data.append(self.xd_noisy)
+                self.theta_noisy_data.append(self.theta_noisy * 180.0 / math.pi)
+                self.thetad_noisy_data.append(self.thetad_noisy)
+
         if self.use_visualization:
             viz.end()
 
-    def get_state(self):
+    def get_measured_state(self):
         if self.noisy:
-            self.x_noisy = self.x + random.gauss(0.0, 0.25)
-            self.theta_noisy = self.theta + random.gauss(0.0, 0.1)
-            self.xd_noisy = self.xd + random.gauss(0.0, 0.1)
-            self.theta_d_noisy = self.theta_d + random.gauss(0.0, 0.1)
-            return np.array([self.x_noisy, self.xd_noisy, self.theta_noisy, self.theta_d_noisy])
+            return np.array([self.x_noisy, self.xd_noisy, self.theta_noisy, self.thetad_noisy])
         
         else:
             return np.array([self.x, self.xd, self.theta, self.theta_d])
