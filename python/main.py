@@ -18,10 +18,3 @@ LQR_cartpole = Cartpole(1.0, 0.5, 0.5, controller, noisy=True ,theta0=0.25)
 LQR_cartpole.simulate(0.001, 5000)
 LQR_cartpole.create_metrics()
 LQR_cartpole.plot_results()
-
-LQR_cartpole = Cartpole(1.0, 0.5, 0.5, controller, noisy=False ,theta0=0.25)
-LQR_cartpole.simulate(0.001, 5000)
-LQR_cartpole.create_metrics()
-LQR_cartpole.plot_results()
-
-

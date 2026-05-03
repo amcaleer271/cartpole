@@ -8,9 +8,10 @@ A visualizer can be used by setting the parameter in init to True
 import math
 import numpy as np
 import matplotlib.pyplot as plt
-from control import PID, LQR
+from control import PID, LQR, create_LQR_mats
 import random
 from visualization import *
+from kf import KalmanFilter
 
 g = 9.81 #m/s2
 
@@ -46,6 +47,7 @@ class Cartpole:
         self.thetad_noisy = 0.0
 
         self.u = 0.0
+        self.prev_u = 0.0
 
         #create np arrays for each pose element
         self.acc = np.array([self.xdd, self.theta_dd])
@@ -64,6 +66,8 @@ class Cartpole:
             self.xd_noisy_data = []
             self.theta_noisy_data = []
             self.thetad_noisy_data = []
+            self.x_kf_prediction = []
+            self.theta_kf_prediction = []
 
     def update(self, u, t):
         #update the state of the cartpole system after a short timestep t
@@ -95,42 +99,54 @@ class Cartpole:
         if self.noisy:
             self.x_noisy = self.x + random.gauss(0.0, 0.50)
             self.theta_noisy = self.theta + random.gauss(0.0, 0.50)
-            self.xd_noisy = self.xd + random.gauss(0.0, 0.50)
-            self.thetad_noisy = self.theta_d + random.gauss(0.0, 0.50)
+            self.xd_noisy = self.xd
+            self.thetad_noisy = self.theta_d 
     
     #Plot pose using matplotlib
     def plot_results(self):
         plt.figure()
         plt.suptitle(f"{self.controller}")
 
-        plt.subplot(5,2,1)
+        plt.subplot(7,3,1)
         plt.plot(self.t_data, self.x_data)
         plt.ylabel("Cart Position x (m)")
         plt.xlabel("Time (s)")
         plt.grid()
 
-        plt.subplot(5,2,3)
+        plt.subplot(7,3,4)
         plt.plot(self.t_data, self.theta_data)
         plt.ylabel("Pole Angle θ (deg)")
         plt.xlabel("Time (s)")
         plt.grid()
 
-        plt.subplot(5,2,5)
+        plt.subplot(7,3,7)
         plt.plot(self.t_data, self.u_data)
         plt.ylabel("Control Input u (N)")
         plt.xlabel("Time (s)")
         plt.grid()
 
         if self.noisy:
-            plt.subplot(5,2,2)
+            plt.subplot(7,3,2)
             plt.plot(self.t_data, self.x_noisy_data)
             plt.ylabel("Measured Cart Position x (m)")
             plt.xlabel("Time (s)")
             plt.grid()
 
-            plt.subplot(5,2,4)
+            plt.subplot(7,3,5)
             plt.plot(self.t_data, self.theta_noisy_data)
             plt.ylabel("Measured Pole Angle θ (deg)")
+            plt.xlabel("Time (s)")
+            plt.grid()
+
+            plt.subplot(7,3,3)
+            plt.plot(self.t_data, self.x_kf_prediction)
+            plt.ylabel("Estimated Cart Position x (m)")
+            plt.xlabel("Time (s)")
+            plt.grid()
+
+            plt.subplot(7,3,6)
+            plt.plot(self.t_data, self.theta_kf_prediction)
+            plt.ylabel("Estimated Pole Angle θ (deg)")
             plt.xlabel("Time (s)")
             plt.grid()
 
@@ -181,12 +197,22 @@ class Cartpole:
         if self.use_visualization:
             viz = visualizer()
 
+        if self.noisy:
+            
+            A, B = create_LQR_mats(1.0, 0.5, 0.5)
+            kf = KalmanFilter(A, B, self.dt)
+
         #iterate through all steps to simulate the cartpole
         for i in range(steps):
             t = i * self.dt
             
-            #update simulation one timestep. select controller in __init__
-            self.u=self.controller.control(self.get_measured_state())
+            if not self.noisy:
+                self.u=self.controller.control(self.get_measured_state())
+            else:
+                x_hat = self.get_measured_state()
+                z = np.array([x_hat[0], x_hat[2]])
+                kf_estimate = kf.estimate(self.prev_u, z)
+                self.u = self.controller.control(kf_estimate)
 
             max_control = 200
             if self.u > max_control:
@@ -195,6 +221,7 @@ class Cartpole:
                 self.u = -max_control
 
             self.update(self.u, dt)
+            self.prev_u = self.u
 
             if self.use_visualization:
                 viz.update(self.x, self.theta, self.L, self.u)
@@ -205,12 +232,13 @@ class Cartpole:
             self.xd_data.append(self.xd)
             self.theta_data.append(self.theta * 180.0 / math.pi)
             self.u_data.append(self.u)
+            
 
             if self.noisy:
                 self.x_noisy_data.append(self.x_noisy)
-                self.xd_noisy_data.append(self.xd_noisy)
                 self.theta_noisy_data.append(self.theta_noisy * 180.0 / math.pi)
-                self.thetad_noisy_data.append(self.thetad_noisy)
+                self.x_kf_prediction.append(kf_estimate[0])
+                self.theta_kf_prediction.append(kf_estimate[2] * 180.0 / math.pi)
 
         if self.use_visualization:
             viz.end()
