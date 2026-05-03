@@ -31,7 +31,7 @@ class Cartpole:
         #initialize angle to random value in range
         self.theta = theta0
         self.theta0 = self.theta
-        print(f"starting angle is {self.theta} rads, {self.theta * 180.0 / math.pi} degs")
+        print(f"Starting angle is {self.theta} rads, {self.theta * 180.0 / math.pi} degs")
 
         #initialize all other state variables to 0
         self.theta_d = 0.0
@@ -50,6 +50,7 @@ class Cartpole:
         #create empty arrays for plotting
         self.t_data = []
         self.x_data = []
+        self.xd_data = []
         self.u_data = []
         self.theta_data = []
 
@@ -83,7 +84,7 @@ class Cartpole:
     #Plot pose using matplotlib
     def plot_results(self):
         plt.figure()
-        
+        plt.suptitle(f"{self.controller}")
         plt.subplot(3,1,1)
         plt.plot(self.t_data, self.x_data)
         plt.ylabel("Cart Position x (m)")
@@ -132,12 +133,15 @@ class Cartpole:
 
         #RMS control input
         self.u_RMS = 0.0
+        self.work = 0.0
         for i, u in enumerate(self.u_data):
             self.u_RMS += u ** 2
+            self.work += abs(u * self.xd_data[i]) * self.dt
         self.u_RMS = math.sqrt(self.u_RMS / (i+1))
         
         print(f"RMS Control input: {self.u_RMS} N")
         print(f"Maximum Control Input {max(self.u_data)}")        
+        print(f"Work done: {self.work} J")    
 
     def simulate(self, dt, steps):
         self.dt = dt
@@ -166,6 +170,7 @@ class Cartpole:
             #append, time, pose, and control data for plotting
             self.t_data.append(t)
             self.x_data.append(self.x)
+            self.xd_data.append(self.xd)
             self.theta_data.append(self.theta * 180.0 / math.pi)
             self.u_data.append(self.u)
 
