@@ -203,11 +203,13 @@ class Cartpole:
         self.ki = ki
         self.kd = kd
 
+#PID needs to be retuned if the mass or L are changed
 PID_cartpole = Cartpole(1.0, 0.5, 0.5, use_controller="PID", theta0=0.3)
 PID_cartpole.simulate(0.001, 5000)
 PID_cartpole.create_metrics()
 PID_cartpole.plot_results()
 
+#LQR is pretty robust to changing the mass or L :))
 LQR_cartpole = Cartpole(1.0, 0.5, 0.5, use_controller="LQR", theta0=0.3)
 LQR_cartpole.simulate(0.001, 5000)
 LQR_cartpole.create_metrics()
