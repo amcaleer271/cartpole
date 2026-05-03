@@ -2,16 +2,6 @@ import math
 import numpy as np
 from scipy.linalg import solve_continuous_are
 
-def bang_bang(state, deadzone, force):
-    u = 0.0
-    if state[1] > deadzone:
-        u = 1 * force
-    elif state[1] < deadzone:
-        u = -1.0 * force
-    else:
-        u = 0.0
-    return u
-
 class PID:
     def __init__(self, kp, ki, kd):
         self.error = np.array([0.0,0.0])
@@ -22,7 +12,10 @@ class PID:
         self.ki = np.array([ki[0], ki[1]])
         self.kd = np.array([kd[0], kd[1]])
 
-    def control(self, state, dt):
+    def __str__(self):
+        return "PID"
+
+    def control(self, state, dt=0.001):
 
         self.error = np.array([state[0], state[2]])
         self.error_d = np.array([state[1], state[3]])
@@ -45,7 +38,17 @@ class LQR:
         #Compute gains
         self.K = np.linalg.inv(self.R) @ self.B.T @ self.P
 
+    def __str__(self):
+        return "LQR"
+    
     def control(self, state):
         #state should be a numpy array of form [x, xdot, theta, thetadot]
         u = float(-self.K @ state)
         return u
+
+def create_LQR_mats(m1, m2, L):
+    g = 9.81
+    A = np.array([[0, 1, 0, 0],[0, 0, (-m2*g)/m1, 0],[0, 0, 0, 1],[0, 0, ((m1+m2)*g)/(m1*L), 0]])
+    B = np.array([[0],[1/m1],[0],[-1/(m1*L)]])
+
+    return A, B
