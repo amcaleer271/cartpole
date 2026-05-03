@@ -14,12 +14,12 @@ g = 9.81 #m/s2
 
 class Cartpole:
 
-    def __init__(self, m1, m2, L, use_vis=False, use_controller="none", theta0=random.uniform(-0.5, 0.5)):
+    def __init__(self, m1, m2, L, use_vis=False, use_controller="none", theta0=random.uniform(-0.5, 0.5), noisy=False):
 
         #PARAMETERS
         self.use_controller = use_controller #available controllers: ["none","bangbang", "PID", "LQR"]
         self.use_visualization = use_vis
-        
+        self.noisy = noisy
         #PID Controller gains [x,theta]:
         self.kp, self.ki, self.kd = [14.5, 50.0],[0.0,2.0],[9.0,9.0]
 
@@ -57,7 +57,7 @@ class Cartpole:
         self.u_data = []
         self.theta_data = []
 
-    def update(self, u,t):
+    def update(self, u, t):
         #update the state of the cartpole system after a short timestep t
         c = math.cos(self.theta)
         s = math.sin(self.theta)
@@ -80,16 +80,14 @@ class Cartpole:
         self.vel = self.vel + self.acc * t
         self.pos = self.pos + self.vel * t
 
-
         self.x, self.theta = self.pos
         self.xd, self.theta_d = self.vel
         self.xdd, self.theta_dd = self.acc
-
     
     #Plot pose using matplotlib
     def plot_results(self):
         plt.figure()
-
+        
         plt.subplot(3,1,1)
         plt.plot(self.t_data, self.x_data)
         plt.ylabel("Cart Position x (m)")
@@ -107,6 +105,7 @@ class Cartpole:
         plt.xlabel("Time (s)")
         plt.grid()
 
+        plt.suptitle(f"{self.use_controller}")
         plt.tight_layout()
         plt.show()
 
@@ -166,9 +165,9 @@ class Cartpole:
             
             #update simulation one timestep. select controller in __init__
             if self.use_controller == "PID":
-                self.u = pid_controller.control([self.x, self.theta, self.xd, self.theta_d], dt)
+                self.u = pid_controller.control(self.get_state(), dt)
             elif self.use_controller == "LQR":
-                self.u = LQR_controller.control(np.array([self.x, self.xd, self.theta, self.theta_d]))
+                self.u = LQR_controller.control(self.get_state())
             elif self.use_controller == "bangbang":
                 self.u = bang_bang(self.pos, 0.15, 1.0)
             elif self.use_controller == "none":
@@ -203,14 +202,26 @@ class Cartpole:
         self.ki = ki
         self.kd = kd
 
+    def get_state(self):
+        if self.noisy:
+            self.x_noisy = self.x + random.gauss(0.0, 0.25)
+            self.theta_noisy = self.theta + random.gauss(0.0, 0.1)
+            self.xd_noisy = self.xd + random.gauss(0.0, 0.1)
+            self.theta_d_noisy = self.theta_d + random.gauss(0.0, 0.1)
+            return np.array([self.x_noisy, self.xd_noisy, self.theta_noisy, self.theta_d_noisy])
+        
+        else:
+            return np.array([self.x, self.xd, self.theta, self.theta_d])
+
+
 #PID needs to be retuned if the mass or L are changed
-PID_cartpole = Cartpole(1.0, 0.5, 0.5, use_controller="PID", theta0=0.3)
+PID_cartpole = Cartpole(1.0, 0.5, 0.5, use_controller="PID")
 PID_cartpole.simulate(0.001, 5000)
 PID_cartpole.create_metrics()
 PID_cartpole.plot_results()
 
 #LQR is pretty robust to changing the mass or L :))
-LQR_cartpole = Cartpole(1.0, 0.5, 0.5, use_controller="LQR", theta0=0.3)
+LQR_cartpole = Cartpole(1.0, 0.5, 0.5, use_controller="LQR")
 LQR_cartpole.simulate(0.001, 5000)
 LQR_cartpole.create_metrics()
 LQR_cartpole.plot_results()

@@ -24,8 +24,8 @@ class PID:
 
     def control(self, state, dt):
 
-        self.error = np.array([state[0], state[1]])
-        self.error_d = np.array([state[2], state[3]])
+        self.error = np.array([state[0], state[2]])
+        self.error_d = np.array([state[1], state[3]])
         self.error_i = self.error_i + self.error * dt
 
         u = self.kp @ np.transpose(self.error) + self.ki @ np.transpose(self.error_i) + self.kd @ np.transpose(self.error_d)
