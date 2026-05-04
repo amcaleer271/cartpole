@@ -14,8 +14,8 @@ class KalmanFilter():
         ])
 
         self.R = np.array([
-            [ 0.25, 0.0 ],
-            [ 0.0, 0.25 ]
+            [ 0.25**2, 0.0 ],
+            [ 0.0, 0.25**2 ]
         ])
 
         self.Q = np.diag([1e-5, 1e-3, 1e-5, 1e-3])

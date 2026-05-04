@@ -97,8 +97,8 @@ class Cartpole:
         self.xdd, self.theta_dd = self.acc
 
         if self.noisy:
-            self.x_noisy = self.x + random.gauss(0.0, 0.50)
-            self.theta_noisy = self.theta + random.gauss(0.0, 0.50)
+            self.x_noisy = self.x + random.gauss(0.0, 0.25)
+            self.theta_noisy = self.theta + random.gauss(0.0, 0.25)
             self.xd_noisy = self.xd
             self.thetad_noisy = self.theta_d 
     
