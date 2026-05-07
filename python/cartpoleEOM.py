@@ -64,7 +64,6 @@ class Cartpole:
         #initialize angle to random value in range
         self.theta = theta0
         self.theta0 = self.theta
-        print(f"Starting angle is {self.theta} rads, {self.theta * 180.0 / math.pi} degs")
 
         #initialize all other state variables to 0
         self.theta_d = 0.0
@@ -235,21 +234,22 @@ class Cartpole:
         print(f"Mass 1 = {self.m1}")
         print(f"Mass 2 = {self.m2}")
         print(f"Length = {self.L}")
+        print(f"Starting angle is {self.theta0} rads, {self.theta0 * 180.0 / math.pi} degs")
 
         #Settling time and final value - time until response remains within 5% of initial value
         print("----------Settling----------")
-        target_value = 0.05 * self.theta0
-        print(f"Target (5% of intial value): {target_value}")
+        target_value = 3.0   #degrees
+        print(f"Target < {target_value} degrees")
         print(f"Final value: {self.theta_data[-1]}")
 
         #If the final value is greater than the target, the system did not settle
         if abs(self.theta_data[-1]) > abs(target_value):
-            print(f"System did not reach < 5% settling")
+            print(f"System did not hold < target value")
 
         #Else, find the last value where the system was outside the settling value, the time index of this is the settling time
         else:
             self.rev_theta = self.theta_data[::-1]
-            self.settled_index = len(self.rev_theta) - next((i for i, x in enumerate(self.rev_theta) if abs(x) > abs(0.05 * self.theta0)), None)
+            self.settled_index = len(self.rev_theta) - next((i for i, x in enumerate(self.rev_theta) if abs(x) > abs(target_value)), None)
             print(f"System settled after {self.t_data[self.settled_index]} s")
 
         #Metrics for controller input and performance
