@@ -26,7 +26,18 @@ class LinearKalmanFilter():
         self.Q = np.diag([1e-5, 1e-3, 1e-5, 1e-3])
 
 
-    def estimate(self, u, z):
+    def estimate(self, u, z) -> np.array:
+        """
+        The estimate function returns cartpole the estimated state from the kalman filter
+        
+        :param u: current control input
+        :param z: current measurement of the system in form [x, theta] (2x1 np array)
+
+        :updates: 
+        self.P, self.K
+
+        :returns: np.array([x, x_dot, theta, theta_dot])
+        """
         #prediction step using discrete time model
         self.x_hat = self.Ad @ self.x_hat + (self.Bd @ np.array([u])).flatten()
         
