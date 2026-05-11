@@ -1,6 +1,7 @@
 import math
 import numpy as np
 from scipy.linalg import solve_continuous_are
+import cvxpy as cp
 
 class PID:
     def __init__(self, kp, ki, kd):
@@ -52,3 +53,40 @@ def create_LQR_mats(m1, m2, L):
     B = np.array([[0],[1/m1],[0],[-1/(m1*L)]])
 
     return A, B
+
+class MPC:
+    def __init__(self, A, B, Q, Qf, R, n=3):
+        #3 step mpc
+
+        self.n = n
+
+        A2 = A@A
+        A3 = A@A@A
+
+        self.F = np.vstack([A, A2, A3])
+        z4 = np.vstack([0,0,0,0])
+        self.G = np.block([[B , z4, z4],
+                           [A@B, B, z4],
+                           [A2@B, A@B, B]])
+        
+        Z4 = np.zeros((4,4))
+
+        self.Q_bar = np.block([[Q, Z4, Z4],
+                               [Z4, Q, Z4],
+                               [Z4, Z4, Qf]])
+        
+        zr = np.zeros((1,1))
+        self.R_bar = np.block([[R, zr, zr],
+                               [zr, R, zr],
+                               [zr, zr, R]])
+        
+        print(self.F.shape)
+        print(self.G.shape)
+        print(self.Q_bar.shape)
+        print(self.R_bar.shape)
+    def control(self, state):
+        H = np.transpose(self.G)@self.Q_bar@self.G + self.R_bar
+        f_t = 2*np.transpose(state)@self.F@self.Q_bar@self.G
+        U = cp.Variable((3,1))
+        
+            
