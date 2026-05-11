@@ -2,6 +2,7 @@ import math
 import numpy as np
 from scipy.linalg import solve_continuous_are
 import cvxpy as cp
+from scipy.signal import cont2discrete
 
 class PID:
     def __init__(self, kp, ki, kd):
@@ -42,10 +43,10 @@ class LQR:
     def __str__(self):
         return "LQR"
     
-    def control(self, state):
+    def control(self, state, dt=0.001):
         #state should be a numpy array of form [x, xdot, theta, thetadot]
-        u = float(-self.K @ state)
-        return u
+        u = -self.K @ state
+        return float(u.item())
 
 def create_LQR_mats(m1, m2, L):
     g = 9.81
@@ -54,39 +55,54 @@ def create_LQR_mats(m1, m2, L):
 
     return A, B
 
+def build_G(A, B, N):
+        nx, nu = B.shape
+        G = np.zeros((nx*N, nu*N))
+
+        for i in range(N):
+            for j in range(i+1):
+                A_power = np.linalg.matrix_power(A, i-j)
+                G[i*nx:(i+1)*nx, j*nu:(j+1)*nu] = A_power @ B
+
+        return G
+
 class MPC:
-    def __init__(self, A, B, Q, Qf, R, n=3):
-        #3 step mpc
+    def __init__(self, A, B, Q, Qf, R, n=3, dt=0.001):
 
         self.n = n
 
-        A2 = A@A
-        A3 = A@A@A
+        Ad, Bd, _, _, _ = cont2discrete((A, B, np.eye(4), np.zeros((4,1))),dt)
+        A_powers = [np.linalg.matrix_power(Ad,i) for i in range(1, self.n+1)]
 
-        self.F = np.vstack([A, A2, A3])
-        z4 = np.vstack([0,0,0,0])
-        self.G = np.block([[B , z4, z4],
-                           [A@B, B, z4],
-                           [A2@B, A@B, B]])
-        
-        Z4 = np.zeros((4,4))
+        self.F = np.vstack(A_powers)
+        self.G = build_G(Ad,Bd,n)
 
-        self.Q_bar = np.block([[Q, Z4, Z4],
-                               [Z4, Q, Z4],
-                               [Z4, Z4, Qf]])
+        self.Q_bar = np.kron(np.eye(self.n), Q)
+        self.Q_bar[-4:, -4:] = Qf
         
         zr = np.zeros((1,1))
-        self.R_bar = np.block([[R, zr, zr],
-                               [zr, R, zr],
-                               [zr, zr, R]])
-        
-        print(self.F.shape)
-        print(self.G.shape)
-        print(self.Q_bar.shape)
-        print(self.R_bar.shape)
-    def control(self, state):
-        H = np.transpose(self.G)@self.Q_bar@self.G + self.R_bar
-        f_t = 2*np.transpose(state)@self.F@self.Q_bar@self.G
-        U = cp.Variable((3,1))
-        
+        self.R_bar = np.kron(np.eye(self.n), R)
+
+        self.H = self.G.T @ self.Q_bar @ self.G + self.R_bar
+
+
+    def control(self, state, dt=0.001):
+        U = cp.Variable((self.n, 1))
+
+        f_t = (2 * state.T @ self.F.T @ self.Q_bar @ self.G).reshape(-1, 1)
+
+        cost = 0.5 * cp.quad_form(U, self.H) + f_t.T @ U
+
+        u_max = 200
+        constraints = [
+            U <= u_max,
+            U >= -u_max
+        ]
+
+        problem = cp.Problem(cp.Minimize(cost), constraints)
+        problem.solve()
+
+        U_opt = U.value
+        u = U_opt[0, 0]
+        return float(u)
             

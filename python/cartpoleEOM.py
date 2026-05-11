@@ -44,6 +44,7 @@ from control import PID, LQR, create_LQR_mats
 import random
 from visualization import *
 from lkf import LinearKalmanFilter
+import time
 
 g = 9.81 #gravity constant, m/s2
 
@@ -121,7 +122,6 @@ class Cartpole:
             [self.m1 + self.m2, self.m2 * self.L * c],
             [self.m2 * c, self.m2 * self.L]
         ])
-
         self.F = np.array([
             u + self.m2 * self.L * (self.theta_d**2) * s,
             self.m2 * g * s   
@@ -296,10 +296,10 @@ class Cartpole:
             t = i * self.dt
             
             if not self.noisy:
-                self.u=self.controller.control(self.get_measured_state())
+                self.u=self.controller.control(self.get_measured_state(),dt=self.dt)
             else:
-                x_hat = self.get_measured_state()              #Current state of the system
-                z = np.array([x_hat[0], x_hat[2]])             #Measurement for kalman filter
+                measured_state = self.get_measured_state()              #Current state of the system
+                z = np.array([measured_state[0], measured_state[2]])             #Measurement for kalman filter
                 kf_estimate = lkf.estimate(self.prev_u, z)     #State estimate from kalman filter
                 self.u = self.controller.control(kf_estimate)  #Control input based on kf state estimate
 
@@ -319,6 +319,7 @@ class Cartpole:
             #Progress the visualization by one frame if using it
             if self.use_visualization:
                 viz.update(self.x, self.theta, self.L, self.u)
+                
 
             #append, time, pose, and control data for plotting
             self.t_data.append(t)
