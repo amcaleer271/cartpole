@@ -296,7 +296,7 @@ class Cartpole:
             t = i * self.dt
             
             if not self.noisy:
-                self.u=self.controller.control(self.get_measured_state(),dt=self.dt)
+                self.u=self.controller.control(self.get_measured_state())
             else:
                 measured_state = self.get_measured_state()              #Current state of the system
                 z = np.array([measured_state[0], measured_state[2]])             #Measurement for kalman filter

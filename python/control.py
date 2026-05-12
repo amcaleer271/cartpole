@@ -71,7 +71,7 @@ class MPC:
 
         self.n = n
 
-        Ad, Bd, _, _, _ = cont2discrete((A, B, np.eye(4), np.zeros((4,1))),dt)
+        Ad, Bd, _, _, _ = cont2discrete((A, B, np.eye(4), np.zeros((4,1))),0.02)
         A_powers = [np.linalg.matrix_power(Ad,i) for i in range(1, self.n+1)]
 
         self.F = np.vstack(A_powers)
@@ -84,25 +84,30 @@ class MPC:
         self.R_bar = np.kron(np.eye(self.n), R)
 
         self.H = self.G.T @ self.Q_bar @ self.G + self.R_bar
-
-
-    def control(self, state, dt=0.001):
-        U = cp.Variable((self.n, 1))
-
-        f_t = (2 * state.T @ self.F.T @ self.Q_bar @ self.G).reshape(-1, 1)
-
-        cost = 0.5 * cp.quad_form(U, self.H) + f_t.T @ U
+        self.U = cp.Variable((self.n, 1))
 
         u_max = 200
-        constraints = [
-            U <= u_max,
-            U >= -u_max
+        self.constraints = [
+            self.U <= u_max,
+            self.U >= -u_max
         ]
 
-        problem = cp.Problem(cp.Minimize(cost), constraints)
-        problem.solve()
+        self.f = cp.Parameter((self.n,1))
+        self.cost = 0.5 * cp.quad_form(self.U, self.H) + self.f.T @ self.U
 
-        U_opt = U.value
+        self.problem = cp.Problem(cp.Minimize(self.cost), self.constraints)
+
+    def __str__(self):
+        return "MPC"
+    
+    def control(self, state, dt=0.001):
+        
+        f_t = (2 * state.T @ self.F.T @ self.Q_bar @ self.G).reshape(-1, 1)
+        self.f.value = f_t
+
+        self.problem.solve(solver=cp.OSQP, warm_start=True)
+
+        U_opt = self.U.value
         u = U_opt[0, 0]
         return float(u)
             
