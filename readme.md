@@ -7,3 +7,5 @@ Here's the log of the project so far:
 1. Implemented a PID controller that could balance the pendulum. Works well for small masses! Struggles with larger masses
 2. Implemented an LQR controller that can use the dynamics of the system to inform the controller! Works well for a large range of masses
 3. Added noise to the measurements for position and velocity (both linear and angular). The LQR controller can still handle it, but much greater control input is required
+4. Added a kalman filter to estimate the cart position given the noisy measurements. Works great! Using this estimated position greatly reduces controller input
+5. Created an MPC controller (just wanted to try it). Took a little while to get working and learned a bunch, now working pretty well!
