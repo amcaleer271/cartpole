@@ -9,3 +9,4 @@ Here's the log of the project so far:
 3. Added noise to the measurements for position and velocity (both linear and angular). The LQR controller can still handle it, but much greater control input is required
 4. Added a kalman filter to estimate the cart position given the noisy measurements. Works great! Using this estimated position greatly reduces controller input
 5. Created an MPC controller (just wanted to try it). Took a little while to get working and learned a bunch, now working pretty well!
+6. Started reimplementing the project in C++ to refresh my skills
