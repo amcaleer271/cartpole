@@ -8,6 +8,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_executable(cartpole_sim
     apps/main.cpp
     src/dynamics.cpp
+    src/simulator.cpp
 )
 
 target_include_directories(cartpole_sim PRIVATE
