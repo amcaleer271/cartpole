@@ -1,6 +1,7 @@
+#pragma once
 namespace cartpole
 {
-    struct state
+    struct State
     {
         double x;
         double x_dot;

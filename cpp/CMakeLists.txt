@@ -7,8 +7,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_executable(cartpole_sim
     apps/main.cpp
+    src/dynamics.cpp
 )
 
 target_include_directories(cartpole_sim PRIVATE
     ${CMAKE_SOURCE_DIR}/include
 )
+
+find_package(Eigen3 REQUIRED)
+
+target_link_libraries(cartpole_sim PRIVATE Eigen3::Eigen)

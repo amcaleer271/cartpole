@@ -1,3 +1,0 @@
-/home/adamm/cartpole/cpp/build/CMakeFiles/cartpole_sim.dir
-/home/adamm/cartpole/cpp/build/CMakeFiles/edit_cache.dir
-/home/adamm/cartpole/cpp/build/CMakeFiles/rebuild_cache.dir
