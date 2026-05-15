@@ -4,5 +4,5 @@
 
 namespace cartpole
 {
-    State dynamics(const State prev_state, const float u, const Params params);
+    State dynamics(const State prev_state, const double u, const Params params);
 }
