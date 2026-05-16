@@ -15,17 +15,22 @@ x (state) - current state of the system
 #include <cartpole/dynamics.hpp>
 #include <cmath>
 #include <iostream>
+#include <cartpole/logging.hpp>
 
 namespace cartpole
 {
-    State simulate(State state0, double dt, int n, Params params){
+    State simulate(const State& state0, double dt, int n, const Params& params){
         State currentState = state0;
+        Logger logger;
 
+        double t =0.0;
         double u = 0.0; //placeholder
+
+        logger.store(currentState, u, t);
         for(int i = 0; i < n; i++){
             currentState = currentState + dynamics(currentState, u, params) * dt;
-
-            std::cout << "x: " << currentState.x << " theta: " << currentState.theta << "\n";
+            t += dt;
+            logger.store(currentState, u, t);
         }
         
         return currentState;
