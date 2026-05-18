@@ -1,10 +1,10 @@
 #include <cartpole/state.hpp>
 #include <cartpole/logging.hpp>
-#include <cartpole/logging.hpp>
 #include <fstream>
 
 namespace cartpole{
 
+    //Contstructor
     Logger::Logger(){
         output_file.open ("log.csv");
         output_file << "Position X,Angle Theta,Control u,Time t\n";

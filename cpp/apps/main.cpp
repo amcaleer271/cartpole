@@ -2,6 +2,7 @@
 #include <cartpole/dynamics.hpp>
 #include <cartpole/params.hpp>
 #include <cartpole/simulator.hpp>
+#include <Eigen/Dense>
 
 using namespace cartpole;
 
@@ -19,8 +20,18 @@ int main()
     sys_params.L = 0.5;
     sys_params.m1 = 1.0;
     sys_params.m2 = 0.5;
-    
-    simulate(state0, 0.001, 1000, sys_params);
+
+    Eigen::Vector2d kp(2,1);
+    Eigen::Vector2d ki(2,1);
+    Eigen::Vector2d kd(2,1);
+
+    kp << 1.0, 2.0;
+    ki << 1.0, 2.0;
+    ki << 1.0, 2.0;
+
+
+    PID pid_controller(kp, ki, kd);
+    simulate(state0, 0.001, 1000, sys_params, pid_controller);
     
     return 0;
 }

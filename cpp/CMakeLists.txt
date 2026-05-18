@@ -10,6 +10,7 @@ add_executable(cartpole_sim
     src/dynamics.cpp
     src/simulator.cpp
     src/logging.cpp
+    src/control.cpp
 )
 
 target_include_directories(cartpole_sim PRIVATE
