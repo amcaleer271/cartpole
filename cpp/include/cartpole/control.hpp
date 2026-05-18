@@ -12,7 +12,7 @@ namespace cartpole
 
     class PID : public Controller{
         private:
-            double kp, ki, kd;
+            Eigen::Vector2d kp, ki, kd;
 
         public:
             PID(Eigen::Vector2d kp, Eigen::Vector2d ki, Eigen::Vector2d kd);
