@@ -47,24 +47,24 @@ def main():
     # Position plot
     plt.figure()
     plt.plot(time, position)
-    plt.xlabel("Time")
-    plt.ylabel("Position")
+    plt.xlabel("Time (s)")
+    plt.ylabel("Position (m)")
     plt.title("Position vs Time")
     plt.grid(True)
 
     # Angle plot
     plt.figure()
     plt.plot(time, angle)
-    plt.xlabel("Time")
-    plt.ylabel("Angle")
+    plt.xlabel("Time (s)")
+    plt.ylabel("Angle (deg)")
     plt.title("Angle vs Time")
     plt.grid(True)
 
     # Control plot
     plt.figure()
     plt.plot(time, control)
-    plt.xlabel("Time")
-    plt.ylabel("Control")
+    plt.xlabel("Time (s)")
+    plt.ylabel("Control u (N)")
     plt.title("Control vs Time")
     plt.grid(True)
 

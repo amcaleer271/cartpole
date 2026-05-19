@@ -25,9 +25,9 @@ int main()
     Eigen::Vector2d ki(2,1);
     Eigen::Vector2d kd(2,1);
 
-    kp << 0.0, 0.0;
+    kp << 14.5, 50.0;
     ki << 0.0, 0.0;
-    kd << 0.0, 0.0;
+    kd << 9.0, 9.0;
 
 
     PID pid_controller(kp, ki, kd);
