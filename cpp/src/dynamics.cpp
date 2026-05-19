@@ -6,6 +6,7 @@ The output of this function are the derivatives of the input state and the accel
 #include <cartpole/state.hpp>
 #include <cartpole/dynamics.hpp>
 #include <cmath>
+#include <Eigen/Dense>
 
 namespace cartpole{
 State dynamics(const State prev_state, const double u, const Params params){
@@ -15,17 +16,26 @@ State dynamics(const State prev_state, const double u, const Params params){
     auto c = cos(prev_state.theta);
     auto m = params.m1;
     auto mp = params.m2;
-    auto mpc2 = mp* c * c;
     auto L = params.L;
     auto g = params.g;
-    auto theta_dot2 = prev_state.theta_dot*prev_state.theta_dot;
+    auto theta_d_2 = prev_state.theta_dot * prev_state.theta_dot; // theta dot squared
+    
+    Eigen::MatrixXd M {
+        {m + mp, mp * L * c},
+        {mp *c, mp *L}
+    };
 
-    auto denom = -1 * L * mpc2 + L * m + L * mp;
+    Eigen::VectorXd F{
+        {u + L * theta_d_2 * s * mp},
+        {mp * g * s}
+    };
 
-    derivative.x = prev_state.x_dot;
-    derivative.x_dot = ((L * mp * s * (theta_dot2) + u) - (g * mp * c * s)) / (-1 * mpc2 + m + mp);
-    derivative.theta = prev_state.theta_dot;
-    derivative.theta_dot = ((g*mp*s*(m+mp))/(mp*denom))-((c*(L*mp*s*(theta_dot2)+u))/(denom));
+    Eigen::VectorXd xdd = M.inverse() * F;
+
+    derivative.x = prev_state.x_dot + xdd(0) * 0.001;
+    derivative.x_dot = xdd(0);
+    derivative.theta = prev_state.theta_dot + xdd(1) * 0.001;
+    derivative.theta_dot = xdd(1);
 
     return derivative;
 }

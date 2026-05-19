@@ -30,7 +30,6 @@ namespace cartpole
         logger.store(currentState, u, t);
         for(int i = 0; i < n; i++){
             u = controller.control(currentState);
-            std::cout << "Control input is: " << u  << std::endl;
             currentState = currentState + dynamics(currentState, u, params) * dt;
             t += dt;
             logger.store(currentState, u, t);

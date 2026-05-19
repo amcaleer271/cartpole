@@ -25,13 +25,13 @@ int main()
     Eigen::Vector2d ki(2,1);
     Eigen::Vector2d kd(2,1);
 
-    kp << 1.0, 2.0;
-    ki << 1.0, 2.0;
-    ki << 1.0, 2.0;
+    kp << 0.0, 0.0;
+    ki << 0.0, 0.0;
+    kd << 0.0, 0.0;
 
 
     PID pid_controller(kp, ki, kd);
-    simulate(state0, 0.001, 1000, sys_params, pid_controller);
+    simulate(state0, 0.001, 5000, sys_params, pid_controller);
     
     return 0;
 }
