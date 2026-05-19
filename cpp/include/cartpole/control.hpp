@@ -6,7 +6,7 @@
 namespace cartpole
 {
     class Controller{
-        private:
+        protected:
             Eigen::MatrixXd A = Eigen::MatrixXd::Zero(4,4);
             Eigen::MatrixXd B = Eigen::MatrixXd::Zero(4,1);
         public:
@@ -28,7 +28,10 @@ namespace cartpole
     class LQR : public Controller{
         private:
             Eigen::MatrixXd Q;
-            Eigen:: MatrixXd R;
+            Eigen::MatrixXd R;
+            Eigen::MatrixXd P;
+            Eigen::MatrixXd K;
+            Eigen::Vector4d current_state;
 
         public:
             double control(State& x);
