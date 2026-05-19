@@ -35,7 +35,7 @@ namespace cartpole
 
         public:
             double control(State& x);
-            LQR(Eigen::MatrixXd Q, Eigen::MatrixXd R);
+            LQR(Eigen::MatrixXd Q, Eigen::MatrixXd R, Params params);
     };
 
     class MPC : public Controller{

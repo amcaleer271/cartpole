@@ -40,8 +40,7 @@ int main()
     Eigen::Matrix<double, 1, 1> R;
     R(0,0) = 0.5;
 
-    LQR lqr_controller(Q, R);
-    lqr_controller.set_system(sys_params);
+    LQR lqr_controller(Q, R, sys_params);
     simulate(state0, 0.001, 5000, sys_params, lqr_controller);
 
     
