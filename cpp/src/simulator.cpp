@@ -20,21 +20,23 @@ x (state) - current state of the system
 
 namespace cartpole
 {
-    State simulate(const State& state0, double dt, int n, const Params& params, Controller& controller){
+    void simulate(const State &state0, double dt, int n, const Params &params, Controller &controller)
+    {
         State currentState = state0;
         Logger logger;
 
-        double t =0.0;
-        double u = 0.0; 
+        double t = 0.0;
+        double u = 0.0;
 
         logger.store(currentState, u, t);
-        for(int i = 0; i < n; i++){
+
+        // Iteratevly call the simlulate function to advance the simulation by dt
+        for (int i = 0; i < n; i++)
+        {
             u = controller.control(currentState);
             currentState = currentState + dynamics(currentState, u, params) * dt;
             t += dt;
             logger.store(currentState, u, t);
         }
-        
-        return currentState;
     }
-} 
+}

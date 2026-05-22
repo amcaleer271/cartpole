@@ -1,3 +1,6 @@
+
+//This header file defines the interface of the Params struct, used to define physical parameters of the system
+
 #pragma once
 namespace cartpole
 {
@@ -9,4 +12,3 @@ namespace cartpole
         double g;
     };
 }
-
