@@ -18,6 +18,12 @@ To tune the gains, a useful procedure is often to increase the $k_p$ gain until 
 
 The following controllers all require information about the system being controlled. The equations of motion (EOM) describe the motion of the system as a result of the forces acting on it. For this derivation the downward direction is defined as negative and a positive angle is measured counterclockwise starting at the upward vertical. 
 
+In matrix form the equations of motion for the cartpole system are:
+
+<img width="513" height="60" alt="image" src="https://github.com/user-attachments/assets/ac08d2b9-576e-4e51-bfb4-48ea39ca4f20" />
+
+See below for the derivation. 
+
 ### Kinematics
 
 The kinematics of the system describe its motion without referencing forces. The position of the pendulum, $(x_p, y_p)$, relative to the global origin is defined as:
@@ -56,7 +62,7 @@ The EOM for the cart can be obtained directly from $F=ma$, where $x$ is the cart
 
 $m \ddot{x} = u + T sin(\theta)$
 
-Substituting the equation from the pendulum derivation for $T sin(\theta)$results in:
+Substituting the equation from the pendulum derivation for $T sin(\theta)$ results in:
 
 $m \ddot{x} = u - m_p\ddot{x} - m_p L \ddot{\theta} cos(\theta) + L \dot{\theta}^2 sin(\theta) m_p$
 
@@ -64,12 +70,27 @@ After some algebraic manipulation, it becomes:
 
 $(m+m_p) \ddot{x} + m_p L \ddot{\theta} cos(\theta) = u + L \dot{\theta}^2 sin(\theta) $
 
-$\begin{bmatrix}  a & b \\  c & d \end{bmatrix} $
+#Linearized Equation of Motion
+
+As the pendulum system generally operates with small values of $\theta$, the equations of motion can be linearized to simplify calculation and enable more responsive control from the optimal controllers. To linearize the system, the small angle approximation can be used to set $cos(\theta) = 1 $ and $sin(\theta) = \theta$. Additionally, the nonlinear $\dot{\theta}$ term can also be assumed to be $0$. 
+
+The linearizaton results in:
+
+<img width="308" height="58" alt="image" src="https://github.com/user-attachments/assets/797e79c9-c070-49e0-b9b4-f5ac2ea227bf" />
+
+Solving for the acceleration vector gives:
+
+<img width="192" height="72" alt="image" src="https://github.com/user-attachments/assets/890049fb-e7f0-44e8-a427-362565076b82" />
+
+It is then useful to write the equations in the standard $\dot{x} = Ax + Bu$ state space form:
+
+<img width="401" height="129" alt="image" src="https://github.com/user-attachments/assets/32a9ff42-05c3-4838-8be5-f9dbe1b078dd" /> 
+
+with the state $\bf{x}$ defines as :
+
+<img width="84" height="115" alt="image" src="https://github.com/user-attachments/assets/d92cb39e-5345-46c7-bda1-065ce15e8f31" />
 
 
-
-
-$\begin{bmatrix} m+m_p &  m_p L cos(\theta)\\ m_p cos(\theta) & m_p L \\ \end{bmatrix}$
 
 
 # LQR Control
@@ -80,6 +101,14 @@ The LQR controller is built around this cost function:
 
 $J = \int (x^T Q x + u^TRu )dt$
 
-where $x$ is the state of the system, $Q$ is a state weighting matrix and $R$ is an control weighting matrix. The $Q$ and $R$ matricies can be tuned by the user to define desired system properties.
+where $x$ is the state of the system, $Q$ is a state weighting matrix and $R$ is an control weighting matrix. The $Q$ and $R$ matricies can be tuned by the user to define desired system properties. The goal is to find a control input $u$ that minimizes the overall cost over all time. 
+
+This is accomplished by also minimizing the future cost $V$.
+
+Definining $V(x)= \min_{J} $
+
+
+
+
 
 
