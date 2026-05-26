@@ -4,6 +4,8 @@ This cartpole project was made with a few free weeks I had between finishing und
 
 The simulator was first made in Python, then recreated in C++ (mainly for me to refresh my C++ skills). 
 
+For more details on the controllers, check out the controller_derivations.md file!
+
 <img width="1166" height="596" alt="image" src="https://github.com/user-attachments/assets/bd4ba114-7b9f-450e-a2db-dc32b4700ed6" />
 
 
@@ -18,3 +20,4 @@ The simulator was first made in Python, then recreated in C++ (mainly for me to 
 6. Recreated the physics simulator in C++
 7. Implemented PID and LQR control in C++
 8. TODO: implement MPC control in C++
+
