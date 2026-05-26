@@ -105,8 +105,59 @@ where $x$ is the state of the system, $Q$ is a state weighting matrix and $R$ is
 
 This is accomplished by also minimizing the future cost $V$.
 
-Definining $V(x)= \min_{J} $
+Definining $V(x)= \min_{u} J$
 
+The Bellman Optimality Principle states that for a policy to be optimal, it must be optimal in the future despite the current/initial conditions. To expand $V(x)$ to include this, we can rewrite it as:
+
+$V(x) = min_{u} (x^T Q x + u^T R u)dt + V(x+\dot{x}dt)$
+
+We can then express the $V(x+\dot{x}dt)$ term with a first order taylor expansion:
+
+$V(x+\dot{x}dt) \approx V(x) + \frac{\partial{V}}{\partial{x}} \dot{x} dt$ 
+
+Rewriting the equation for $V(x)$ using the taylor expansion gives:
+
+$V(x) = min_{u} (x^T Q x + u^T R u)dt + V(x) + \frac{\partial{V}}{\partial{x}} \dot{x} dt$
+
+Simplifying algebraicly results in:
+
+$0 = min_{u} (x^T Q x + u^T R u +  \frac{\partial{V}}{\partial{x}} \dot{x})$
+
+The state space equation of the system $\dot{x} = Ax + Bu$ can then be substituted into this equation to result in:
+
+$0 = min_{u} (x^T Q x + u^T R u +  \frac{\partial{V}}{\partial{x}}( Ax + Bu))$
+
+This equation is a form of the [Hamilton-Jacobi-Bellman (HJB) equation](https://en.wikipedia.org/wiki/Hamilton%E2%80%93Jacobi%E2%80%93Bellman_equation).
+
+To solve it, we can assume $V = x^T P x$, where $P$ is a positive semi-definite matrix, then:
+
+$\frac{\partial V}{\partial x} = 2 x^T P$
+
+Substituting into the HJB and expanding all terms gives:
+
+$0 = min_{u} (x^T Q x + u^T R u + 2 x^T P A x + 2 x^T P B u) $
+
+To find the minimum of this, we can apply some simple calculus! We just want to find where the derivative with respect to u is 0! To make things easier, we can also ignore any terms that dont contain a $u$ variable.
+
+$\frac{\partial}{\partial u} (u^T R u + 2 x^T P B u) = 0$
+
+Evaluating this derivative gives us:
+
+$2 R u + 2 B^T P x = 0$
+
+Solving for $u$ then gives us:
+
+$u = -R^-1 B^T P x$
+
+Note that this is in the form of the optimal control law $u = -k x$, where $k = R^-1 B^T P$ !
+
+To solve for the positive semi-definite matrix $P$, we can assemble the [Algebraic Riccati Equation](https://en.wikipedia.org/wiki/Algebraic_Riccati_equation) by substituting the solution we found for $u$ into the HJB equation, resulting in:
+
+$0 = x^T (Q - PBR^-1 B^T P + PA + A^TP) x$
+
+Note that this is the continuous form of the algebraic Riccati Equation (CARE). For discrete time implementations (like is used in this simulator) there also exists a Discrete Algebraic Riccati Equation (DARE). 
+
+There are multiple ways to solve for the $P$ matrix, including convex optimization solvers (such as those provided by SciPy or cvxpy) and iterative methods (as was implemented in the C++ implementation of the LQR controller in this simulator). 
 
 
 
