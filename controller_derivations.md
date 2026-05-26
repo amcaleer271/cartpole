@@ -157,7 +157,7 @@ $0 = x^T (Q - PBR^-1 B^T P + PA + A^TP) x$
 
 Note that this is the continuous form of the algebraic Riccati Equation (CARE). For discrete time implementations (like is used in this simulator) there also exists a Discrete Algebraic Riccati Equation (DARE). 
 
-There are multiple ways to solve for the $P$ matrix, including convex optimization solvers (such as those provided by SciPy or cvxpy) and iterative methods (as was implemented in the C++ implementation of the LQR controller in this simulator). 
+There are multiple ways to solve for the $P$ matrix, including optimization solvers (such as those provided by SciPy) and iterative methods (as was implemented in the C++ implementation of the LQR controller in this simulator). 
 
 
 
